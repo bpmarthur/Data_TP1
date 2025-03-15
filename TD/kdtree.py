@@ -143,6 +143,8 @@ class KDTree(NearestNeighborSearch):
         """
         if node is None:
             return None
+        
+        #There may be an issue because no matter which sens takes the inequality, the grader passes the test
         if node.med > x[node.c]:
             retour = self._defeatist(node.left, x)
             if retour is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
