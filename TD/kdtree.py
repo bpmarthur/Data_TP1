@@ -142,17 +142,19 @@ class KDTree(NearestNeighborSearch):
         Defeatist search of nearest neighbor of x in node
         """
         if node is None:
-            return None
+            return False #Signifie que le prochain devra actualiser les données self._current_dist et self._current_index
         
         #There may be an issue because no matter which sens takes the inequality, the grader passes the test
         if node.med > x[node.c]:
-            retour = self._defeatist(node.left, x)
-            if retour is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx
+            if not self._defeatist(node.left, x):  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            return True
         else:
-            retour = self._defeatist(node.right, x)
-            if retour is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx
+            if not self._defeatist(node.right, x):  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            return True
 
     def _backtracking(self, node: Node | None, x: np.ndarray):
         """
