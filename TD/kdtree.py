@@ -197,7 +197,7 @@ class KDTree(NearestNeighborSearch):
                 self._backtracking(node.right, x)
         #On regarde s'il faut aller dans l'arbre de droite
         if x[node.c] - self._current_dist <= node.med:
-                self._backtracking(node.right, x)
+                self._backtracking(node.left, x)
        
     def query(self, x, mode: str = "backtracking"):
         """
