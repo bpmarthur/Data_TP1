@@ -155,8 +155,37 @@ class KDTree(NearestNeighborSearch):
                 self._current_dist = self.metric(self.X[node.idx], x) 
                 self._current_idx = node.idx
             return True
-
     def _backtracking(self, node: Node | None, x: np.ndarray):
+        """
+        Backtracking search of nearest neighbor of x in node
+        """
+        if node is None:
+            return
+        if node.med > x[node.c]:    #On cherche à gauche ou en bas pour la 2D
+            #On cherche du côté où se trouve x en premier
+            result = self._backtracking(node.left, x)
+            if self.metric(self.X[node.idx], x) < self._current_dist:  #False signifie que nous nous trouvons sur une feuille, comme précédemment
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            
+            #S'il peut exister des éléments dans l'arbre de droite qui sont a une distance plus petite que la distance actuelle
+            if x[node.c] + self._current_dist >= node.med:
+                self._backtracking(node.right, x)
+
+            return True 
+        else:       #On cherche à droite ou en haut pour la 2D
+            #On cherche du côté où se trouve x en premier
+            self._backtracking(node.right, x)
+            if self.metric(self.X[node.idx], x) < self._current_dist:  #False signifie que nous nous trouvons sur une feuille, comme précédemment
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            
+            #S'il peut exister des éléments dans l'arbre de droite qui sont a une distance plus petite que la distance actuelle
+            if x[node.c] + self._current_dist >= node.med:
+                self._backtracking(node.left, x)
+
+            
+    def _backtracking_2(self, node: Node | None, x: np.ndarray):
         """
         Backtracking search of nearest neighbor of x in node
         """
