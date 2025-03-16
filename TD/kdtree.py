@@ -161,7 +161,8 @@ class KDTree(NearestNeighborSearch):
         Backtracking search of nearest neighbor of x in node
         """
         index, dist = self._backtracking_aux(node, x)
-        return index
+        self._current_dist = dist
+        self._current_idx = index
 
     def _backtracking_aux(self, node: Node | None, x: np.ndarray):
         """
