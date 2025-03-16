@@ -240,5 +240,4 @@ class KDTree(NearestNeighborSearch):
         return self._current_dist, self._current_idx
 
     def set_xaggle_config(self):
-        self.mode = None  # Choose search strategy for xaggle
-        pass
+        self.mode = "backtracking"  # Choose search strategy for xaggle
