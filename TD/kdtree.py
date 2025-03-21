@@ -142,57 +142,63 @@ class KDTree(NearestNeighborSearch):
         Defeatist search of nearest neighbor of x in node
         """
         if node is None:
-            return None
+            return False #Signifie que le prochain devra actualiser les données self._current_dist et self._current_index
         
         #There may be an issue because no matter which sens takes the inequality, the grader passes the test
         if node.med > x[node.c]:
-            retour = self._defeatist(node.left, x)
-            if retour is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx
+            if not self._defeatist(node.left, x):  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            return True
         else:
-            retour = self._defeatist(node.right, x)
-            if retour is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx
-
+            if not self._defeatist(node.right, x):  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            return True
     def _backtracking(self, node: Node | None, x: np.ndarray):
         """
         Backtracking search of nearest neighbor of x in node
         """
-        index, dist = self._backtracking_aux(node, x)
-        return index
+        if node is None:
+            return
+        if node.med > x[node.c]:    #On cherche à gauche ou en bas pour la 2D
+            #On cherche du côté où se trouve x en premier
+            result = self._backtracking(node.left, x)
+            if self.metric(self.X[node.idx], x) < self._current_dist: 
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            
+            #S'il peut exister des éléments dans l'arbre de droite qui sont a une distance plus petite que la distance actuelle
+            if x[node.c] + self._current_dist >= node.med:
+                self._backtracking(node.right, x)
 
-    def _backtracking_aux(self, node: Node | None, x: np.ndarray):
+        else:       #On cherche à droite ou en haut pour la 2D
+            #On cherche du côté où se trouve x en premier
+            self._backtracking(node.right, x)
+            if self.metric(self.X[node.idx], x) < self._current_dist: 
+                self._current_dist = self.metric(self.X[node.idx], x) 
+                self._current_idx = node.idx
+            
+            #S'il peut exister des éléments dans l'arbre de droite qui sont a une distance plus petite que la distance actuelle
+            if x[node.c] - self._current_dist <= node.med:
+                self._backtracking(node.left, x)
+        
+    def _backtracking_2(self, node: Node | None, x: np.ndarray):
         """
         Backtracking search of nearest neighbor of x in node
         """
         if node is None:
-            return (None,0)
-        if node.med > x[node.c]:    #On cherche à gauche ou en bas pour la 2D
-            #On cherche du côté où se trouve x en premier
-            index,dist = self._backtracking_aux(node.left, x)
-            if index is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx, eucl_dist(self.X[node.idx], x)
-            
-            #Si il peut se trouver de l'autre côté alors on va le chercher
-            if x[node.c] + dist >= node.med:
-                index_prim,dist_prim = self._backtracking_aux(node.right, x)
-                if dist_prim < dist:
-                    return index_prim,dist_prim
-
-            return index,dist
-        else:       #On cherche à droite ou en haut pour la 2D
-            #On cherche du côté où se trouve x en premier
-            index,dist = self._backtracking_aux(node.right, x)
-            if index is None:  #Si le retour est None, cela veut dire qu'on est une feuille, auquel cas on renvoie notre l'indice de notre feuille
-                return node.idx, eucl_dist(self.X[node.idx], x)
-            
-            #Si il peut se trouver de l'autre côté alors on va le chercher
-            if x[node.c] - dist <= node.med:
-                index_prim,dist_prim = self._backtracking_aux(node.left, x)
-                if dist_prim < dist:
-                    return index_prim,dist_prim
-            return index,dist
-        
+            return
+        if self.metric(self.X[node.idx], x) < self._current_dist:  
+            self._current_dist = self.metric(self.X[node.idx], x) 
+            self._current_idx = node.idx
+        #On regarde s'il faut aller dans l'arbre de gauche 
+        if x[node.c] + self._current_dist >= node.med:
+                self._backtracking(node.right, x)
+        #On regarde s'il faut aller dans l'arbre de droite
+        if x[node.c] - self._current_dist <= node.med:
+                self._backtracking(node.left, x)
+       
     def query(self, x, mode: str = "backtracking"):
         """
         Queries given mode 'backtracking' or 'defeatist'
@@ -208,5 +214,4 @@ class KDTree(NearestNeighborSearch):
         return self._current_dist, self._current_idx
 
     def set_xaggle_config(self):
-        self.mode = None  # Choose search strategy for xaggle
-        pass
+        self.mode = "backtracking"  # Choose search strategy for xaggle
